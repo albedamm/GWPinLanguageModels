@@ -126,9 +126,9 @@ def main():
     )
 
     # (optional) uncomment this for printing model size once
-    # print(f"Device: {DEVICE}")
-    # print(f"Model parameters: {model.get_num_params():,}")
-    # print(f"Training for {MAX_ITERS} iterations | batch={BATCH_SIZE} | block={BLOCK_SIZE}")
+    print(f"Device: {DEVICE}")
+    print(f"Model parameters: {model.get_num_params():,}")
+    print(f"Training for {MAX_ITERS} iterations | batch={BATCH_SIZE} | block={BLOCK_SIZE}")
 
     t0 = time.time()
     for it in range(MAX_ITERS + 1):
