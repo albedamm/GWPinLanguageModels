@@ -17,6 +17,11 @@ import numpy as np
 import torch
 
 from model import GPTConfig, GPT
+from codecarbon import EmissionsTracker
+
+tracker = EmissionsTracker()
+tracker.start()
+
 
 # -----------------------------------------------------------------------------
 # Experiment configuration
@@ -192,3 +197,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+emissions = tracker.stop()
+print(f"Emissions: {emissions} kg CO₂")

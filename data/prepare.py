@@ -12,6 +12,10 @@ import os
 import pickle
 import numpy as np
 from urllib.request import urlopen
+from codecarbon import EmissionsTracker
+
+tracker = EmissionsTracker()
+tracker.start()
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(DATA_DIR, "input.txt")
@@ -87,3 +91,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+emissions = tracker.stop()
+print(f"Emissions: {emissions} kg CO₂")
