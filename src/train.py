@@ -11,6 +11,7 @@ Source: https://github.com/karpathy/nanoGPT
 import os
 import time
 import pickle
+import sys
 from dataclasses import asdict
 
 import numpy as np
@@ -19,17 +20,13 @@ import torch
 from model import GPTConfig, GPT
 from codecarbon import EmissionsTracker
 
-tracker = EmissionsTracker()
-tracker.start()
-
-
 # -----------------------------------------------------------------------------
 # Experiment configuration
 
 # I/O
 OUT_DIR = "out"
 DATA_DIR = os.path.join("data")
-EVAL_INTERVAL = 200     
+EVAL_INTERVAL = 100
 EVAL_ITERS = 50
 LOG_INTERVAL = 50
 SAVE_CHECKPOINT = True
@@ -44,13 +41,26 @@ BIAS = True
 # Training (main parameters you can also experiment with)
 SEED = 1
 DEVICE = "cpu"          # If you can, try also seeing consumption when using gpu (change this to 'cuda' if torch.cuda.is_available() else 'cpu')
-DTYPE = "float32"       
+DTYPE = "float32"
 BATCH_SIZE = 32         # Number of sequences processed in parallel.
-BLOCK_SIZE = 256        # Maximum context length for predictions (e.g. 128 or 256). The longer the block size, the more memory and compute it requires, but it can also lead to better performance.
-MAX_ITERS = 2000        # Total number of training iterations. The more iterations, the better the model can perform, but it also takes more time and energy to train.
-LEARNING_RATE = 3e-4    # the standard starting learning rate, often good enough for a first try
-WEIGHT_DECAY = 0.1      # L2 Regularization
-GRAD_CLIP = 1.0         # To prevent exploding gradients
+BLOCK_SIZE = 64         # Maximum context length for predictions.
+MAX_ITERS = 500         # Total number of training iterations.
+LEARNING_RATE = 3e-4
+WEIGHT_DECAY = 0.1
+GRAD_CLIP = 1.0
+
+# -----------------------------------------------------------------------------
+# Logging setup
+
+LOG_FILE = f"out/.log/cpu_{MAX_ITERS}_{BLOCK_SIZE}.log"
+log_file = open(LOG_FILE, "a")
+sys.stdout = log_file
+sys.stderr = log_file
+# -----------------------------------------------------------------------------
+# Emissions tracker
+
+tracker = EmissionsTracker()
+tracker.start()
 
 # -----------------------------------------------------------------------------
 
@@ -100,7 +110,7 @@ def save_checkpoint(out_dir: str, model: GPT, optimizer: torch.optim.Optimizer, 
         "optim_state": optimizer.state_dict(),
         "config": config,
     }
-    torch.save(ckpt, os.path.join(out_dir, "ckpt.pt"))
+    torch.save(ckpt, os.path.join(out_dir, f"ckpt_cpu_{MAX_ITERS}_{BLOCK_SIZE}.pt"))
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -131,9 +141,9 @@ def main():
     )
 
     # (optional) uncomment this for printing model size once
-    print(f"Device: {DEVICE}")
-    print(f"Model parameters: {model.get_num_params():,}")
-    print(f"Training for {MAX_ITERS} iterations | batch={BATCH_SIZE} | block={BLOCK_SIZE}")
+    # print(f"Device: {DEVICE}")
+    # print(f"Model parameters: {model.get_num_params():,}")
+    # print(f"Training for {MAX_ITERS} iterations | batch={BATCH_SIZE} | block={BLOCK_SIZE}")
 
     t0 = time.time()
     for it in range(MAX_ITERS + 1):
@@ -197,6 +207,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-emissions = tracker.stop()
-print(f"Emissions: {emissions} kg CO₂")
+    emissions = tracker.stop()
+    print(f"Emissions: {emissions} kg CO₂")
